@@ -10,7 +10,7 @@ class ResNet50(nn.Module):
         super().__init__()
 
         image_size = cfg.INPUT.IMAGE_SIZE
-        output_channels = cfg.MODEL.BACKBONE.OUT_CHANNELS
+        self.output_channels = cfg.MODEL.BACKBONE.OUT_CHANNELS
         image_channels = cfg.MODEL.BACKBONE.INPUT_CHANNELS
         self.backbone = resnet50(pretrained=True)
 
@@ -30,53 +30,38 @@ class ResNet50(nn.Module):
             self.backbone.layer2,
             self.backbone.layer3,
             nn.Conv2d(
-                in_channels=output_channels[0],
-                out_channels=output_channels[0],
+                in_channels=self.output_channels[0],
+                out_channels=self.output_channels[0],
                 kernel_size=1,
                 stride=1,
                 padding=0
             )
         )
-        self.modules.append(self.bank1)
+        #self.modules.append(self.bank1)
 
-        for i in range(len(output_channels)-1):
-            bank = nn.Sequential(
-            Bottleneck(
-                inplanes=output_channels[i], 
-                planes=output_channels[i]//2, 
-                stride=1, 
-                downsample=nn.Sequential(
-                    nn.Conv2d(
-                        in_channels=output_channels[i],
-                        out_channels=output_channels[i]*2,
-                        kernel_size=3, 
-                        stride=2,
-                        padding=1, 
-                        bias=False),
-                    nn.BatchNorm2d(output_channels[i]*2)
-                ), 
-                groups=1,
-                base_width=64, 
-                dilation=1, 
-                norm_layer=None
-            ),
-            Bottleneck(
-                inplanes=output_channels[i]*2, 
-                planes=output_channels[i]//2, 
-                stride=1, 
-                downsample=None, 
-                groups=1,
-                base_width=64, 
-                dilation=1, 
-                norm_layer=None
-            )
-            )
+        for i, (input_size, output_size, channels) in enumerate(zip(self.output_channels[:-1], self.output_channels[1:], [256, 256, 128, 128, 128])):
+            if i < 4:
+                bank = nn.Sequential(
+                    nn.Conv2d(input_size, channels, kernel_size=1, bias=False),
+                    nn.BatchNorm2d(channels),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(channels, output_size, kernel_size=3, padding=1, stride=2, bias=False),
+                    nn.BatchNorm2d(output_size),
+                    nn.ReLU(inplace=True),
+                )
+            else:
+                bank = nn.Sequential(
+                    nn.Conv2d(input_size, channels, kernel_size=1, bias=False),
+                    nn.BatchNorm2d(channels),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(channels, output_size, kernel_size=(3,2), bias=False),
+                    nn.BatchNorm2d(output_size),
+                    nn.ReLU(inplace=True),
+                )
             self.modules.append(bank)
 
-       
 
         self.feature_extractor = nn.Sequential(*self.modules)
-        print(self.feature_extractor)
 
     def forward(self, x):
         """
@@ -91,19 +76,17 @@ class ResNet50(nn.Module):
         where out_features[0] should have the shape:
             shape(-1, output_channels[0], 38, 38),
         """
-        out_features = self.modules
-        feature_output = x # remember that each feature output from one bank needs to be passed over to the next bank
-        print("x.shape: ",feature_output.shape)
-        for idx, feature in enumerate(out_features):
-            print(idx)
+        #out_features = self.modules
+        feature_output = self.bank1(x) # remember that each feature output from one bank needs to be passed over to the next bank
+        out_features = [feature_output]
+        for idx, feature in enumerate(self.modules):
             feature_output = feature(feature_output)
-            out_features[idx] = feature_output
-            print(str(idx),".shape: ",feature_output.shape)
+            out_features.append(feature_output)
         
         for idx, feature in enumerate(out_features):
             out_channel = self.output_channels[idx]
-            feature_map_size = feature.shape[2]
-            expected_shape = (out_channel, feature_map_size, feature_map_size)
+            feature_map_size = feature.shape
+            expected_shape = (out_channel, feature_map_size[2], feature_map_size[3])
             assert feature.shape[1:] == expected_shape, \
                 f"Expected shape: {expected_shape}, got: {feature.shape[1:]} at output IDX: {idx}"
         return tuple(out_features)
