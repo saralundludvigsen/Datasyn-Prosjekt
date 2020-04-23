@@ -1,6 +1,7 @@
 from torch import nn
 from ssd.modeling.backbone.vgg import VGG
 from ssd.modeling.backbone.basic import BasicModel
+from ssd.modeling.backbone.resnet import MyResNet
 from ssd.modeling.box_head.box_head import SSDBoxHead
 from ssd.utils.model_zoo import load_state_dict_from_url
 from ssd import torch_utils
@@ -9,7 +10,7 @@ class SSDDetector(nn.Module):
     def __init__(self, cfg):
         super().__init__()
         self.cfg = cfg
-        self.backbone = build_backbone(cfg)
+        self.backbone = build_backbone(cfg) #basic model
         self.box_head = SSDBoxHead(cfg)
         print(
             "Detector initialized. Total Number of params: ",
@@ -21,6 +22,7 @@ class SSDDetector(nn.Module):
 
     def forward(self, images, targets=None):
         features = self.backbone(images)
+        
 
         detections, detector_losses = self.box_head(features, targets)
         if self.training:
@@ -40,4 +42,7 @@ def build_backbone(cfg):
             state_dict = load_state_dict_from_url(
                 "https://s3.amazonaws.com/amdegroot-models/vgg16_reducedfc.pth")
             model.init_from_pretrain(state_dict)
+        return model
+    if backbone_name == "resnet":
+        model = MyResNet(cfg)
         return model
