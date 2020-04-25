@@ -12,6 +12,7 @@ MODEL:
         MAX_SIZES: [[41, 54], [90, 119], [138, 184], [186, 248], [235, 313], [283, 378]]
         ASPECT_RATIOS: [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
         BOXES_PER_LOCATION: [4, 6, 6, 6, 4, 4]
+
 INPUT:
     IMAGE_SIZE: [270, 360] #300
 DATASETS:
