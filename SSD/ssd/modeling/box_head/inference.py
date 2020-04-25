@@ -2,7 +2,6 @@ import torch
 from ssd.container import Container
 from ssd.utils.nms import batched_nms
 
-
 class PostProcessor:
     def __init__(self, cfg):
         super().__init__()
