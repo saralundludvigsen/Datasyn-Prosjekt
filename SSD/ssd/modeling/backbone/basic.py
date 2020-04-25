@@ -26,31 +26,31 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=image_channels,
                 out_channels=32,
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=1,
                 padding=1
             ), 
             nn.MaxPool2d(
-                kernel_size=2,
+                kernel_size=[2, 2],
                 stride=2
             ),
             nn.ReLU(), 
             nn.Conv2d(
                 in_channels=32,
                 out_channels=64,
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=1,
                 padding=1
             ), 
             nn.MaxPool2d(
-                kernel_size=2,
+                kernel_size=[2, 2],
                 stride=2
             ),
             nn.ReLU(), 
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=1,
                 padding=1
             ), 
@@ -59,7 +59,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=64,
                 out_channels=output_channels[0],
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=2,
                 padding=1
             )
@@ -69,7 +69,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=output_channels[0],
                 out_channels=128,
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=1,
                 padding=1
             ), 
@@ -78,7 +78,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=128,
                 out_channels=output_channels[1],
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=2,
                 padding=1
             )
@@ -88,7 +88,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=output_channels[1],
                 out_channels=256,
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=1,
                 padding=1
             ), 
@@ -97,7 +97,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=256,
                 out_channels=output_channels[2],
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=2,
                 padding=1
             )
@@ -107,7 +107,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=output_channels[2],
                 out_channels=128,
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=1,
                 padding=1
             ), 
@@ -116,7 +116,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=128,
                 out_channels=output_channels[3],
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=2,
                 padding=1
             )
@@ -126,7 +126,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=output_channels[3],
                 out_channels=128,
-                kernel_size=3,
+                kernel_size=[2, 3],
                 stride=1,
                 padding=1
             ), 
@@ -135,7 +135,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=128,
                 out_channels=output_channels[4],
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=2,
                 padding=1
             )
@@ -145,7 +145,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=output_channels[4],
                 out_channels=128,
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=1,
                 padding=1
             ), 
@@ -154,7 +154,7 @@ class BasicModel(torch.nn.Module):
             nn.Conv2d(
                 in_channels=128,
                 out_channels=output_channels[5],
-                kernel_size=3,
+                kernel_size=[3, 3],
                 stride=1,
                 padding=0
             )
@@ -185,12 +185,14 @@ class BasicModel(torch.nn.Module):
         feature_output = x # remember that each feature output from one bank needs to be passed over to the next bank
         for idx, feature in enumerate(out_features):
             feature_output = feature(feature_output)
+            #print("feature_output: ", feature_output.shape)
             out_features[idx] = feature_output
         
         for idx, feature in enumerate(out_features):
             out_channel = self.output_channels[idx]
-            feature_map_size = feature.shape[2]
-            expected_shape = (out_channel, feature_map_size, feature_map_size)
+            feature_map_size = feature.shape
+            expected_shape = (out_channel, feature_map_size[2], feature_map_size[3])
             assert feature.shape[1:] == expected_shape, \
                 f"Expected shape: {expected_shape}, got: {feature.shape[1:]} at output IDX: {idx}"
         return tuple(out_features)
+
