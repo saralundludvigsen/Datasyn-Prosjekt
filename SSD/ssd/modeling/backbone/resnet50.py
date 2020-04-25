@@ -37,31 +37,182 @@ class ResNet50(nn.Module):
                 padding=0
             )
         )
+
+        self.bank2 = nn.Sequential(
+                Bottleneck(
+                    inplanes=1024, 
+                    planes=128, 
+                    stride=2, 
+                    downsample=nn.Sequential(
+                        nn.Conv2d(
+                            in_channels=1024,
+                            out_channels=512,
+                            kernel_size=1, 
+                            stride=2,
+                            padding=0, 
+                            bias=False),
+                        nn.BatchNorm2d(512)
+                    ), 
+                    groups=1,
+                    base_width=64, 
+                    dilation=1, 
+                    norm_layer=None
+                ),
+                Bottleneck(
+                    inplanes=512, 
+                    planes=128, 
+                    stride=1, 
+                    downsample=None, 
+                    groups=1,
+                    base_width=64, 
+                    dilation=1, 
+                    norm_layer=None
+                )
+                
+                )
         #self.modules.append(self.bank1)
-
-        for i, (input_size, output_size, channels) in enumerate(zip(self.output_channels[:-1], self.output_channels[1:], [256, 256, 128, 128, 128])):
-            if i < 4:
-                bank = nn.Sequential(
-                    nn.Conv2d(input_size, channels, kernel_size=1, bias=False),
-                    nn.BatchNorm2d(channels),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(channels, output_size, kernel_size=3, padding=1, stride=2, bias=False),
-                    nn.BatchNorm2d(output_size),
-                    nn.ReLU(inplace=True),
+        #print(self.bank2)
+        
+        self.bank3 = nn.Sequential(
+                Bottleneck(
+                    inplanes=512, 
+                    planes=128, 
+                    stride=2, 
+                    downsample=nn.Sequential(
+                        nn.Conv2d(
+                            in_channels=512,
+                            out_channels=512,
+                            kernel_size=1, 
+                            stride=2,
+                            padding=0, 
+                            bias=False),
+                        nn.BatchNorm2d(512)
+                    ), 
+                    groups=1,
+                    base_width=64, 
+                    dilation=1, 
+                    norm_layer=None
+                ),
+                Bottleneck(
+                    inplanes=512, 
+                    planes=128, 
+                    stride=1, 
+                    downsample=None, 
+                    groups=1,
+                    base_width=64, 
+                    dilation=1, 
+                    norm_layer=None
                 )
-            else:
-                bank = nn.Sequential(
-                    nn.Conv2d(input_size, channels, kernel_size=1, bias=False),
-                    nn.BatchNorm2d(channels),
-                    nn.ReLU(inplace=True),
-                    nn.Conv2d(channels, output_size, kernel_size=(3,2), bias=False),
-                    nn.BatchNorm2d(output_size),
-                    nn.ReLU(inplace=True),
+                
                 )
-            self.modules.append(bank)
+        #print(self.bank3)
 
+        self.bank4 = nn.Sequential(
+                Bottleneck(
+                    inplanes=512, 
+                    planes=64, 
+                    stride=2, 
+                    downsample=nn.Sequential(
+                        nn.Conv2d(
+                            in_channels=512,
+                            out_channels=256,
+                            kernel_size=1, 
+                            stride=2,
+                            padding=0, 
+                            bias=False),
+                        nn.BatchNorm2d(256)
+                    ), 
+                    groups=1,
+                    base_width=64, 
+                    dilation=1, 
+                    norm_layer=None
+                ),
+                Bottleneck(
+                    inplanes=256, 
+                    planes=64, 
+                    stride=1, 
+                    downsample=None, 
+                    groups=1,
+                    base_width=64, 
+                    dilation=1, 
+                    norm_layer=None
+                )
+                
+                )
+        #print(self.bank4)
+        
+        self.bank5 = nn.Sequential(
+                Bottleneck(
+                    inplanes=256, 
+                    planes=64, 
+                    stride=2, 
+                    downsample=nn.Sequential(
+                        nn.Conv2d(
+                            in_channels=256,
+                            out_channels=256,
+                            kernel_size=1, 
+                            stride=2,
+                            padding=0, 
+                            bias=False),
+                        nn.BatchNorm2d(256)
+                    ), 
+                    groups=1,
+                    base_width=64, 
+                    dilation=1, 
+                    norm_layer=None
+                ),
+                Bottleneck(
+                    inplanes=256, 
+                    planes=64, 
+                    stride=1, 
+                    downsample=None, 
+                    groups=1,
+                    base_width=64, 
+                    dilation=1, 
+                    norm_layer=None
+                )
+                
+                )
+        #print(self.bank5)
+
+        self.bank6 = nn.Sequential(
+                Bottleneck(
+                    inplanes=256, 
+                    planes=64, 
+                    stride=2, 
+                    downsample=nn.Sequential(
+                        nn.Conv2d(
+                            in_channels=256,
+                            out_channels=256,
+                            kernel_size=1, 
+                            stride=2,
+                            padding=0, 
+                            bias=False),
+                        nn.BatchNorm2d(256)
+                    ), 
+                    groups=1,
+                    base_width=64, 
+                    dilation=1, 
+                    norm_layer=None
+                ),
+                Bottleneck(
+                    inplanes=256, 
+                    planes=64, 
+                    stride=1, 
+                    downsample=None, 
+                    groups=1,
+                    base_width=64, 
+                    dilation=1, 
+                    norm_layer=None
+                ),
+                nn.MaxPool2d(kernel_size=2,stride=2)
+                
+                )
+        #print(self.bank5)
+        
 
         self.feature_extractor = nn.Sequential(*self.modules)
+        print(self.feature_extractor)
 
     def forward(self, x):
         """
@@ -78,16 +229,16 @@ class ResNet50(nn.Module):
         """
         #out_features = self.modules
         feature_output = self.bank1(x) # remember that each feature output from one bank needs to be passed over to the next bank
+        self.modules = [self.bank2, self.bank3, self.bank4, self.bank5, self.bank6]
         out_features = [feature_output]
         for idx, feature in enumerate(self.modules):
             feature_output = feature(feature_output)
             out_features.append(feature_output)
-        
+
         for idx, feature in enumerate(out_features):
             out_channel = self.output_channels[idx]
-            feature_map_size = feature.shape
-            expected_shape = (out_channel, feature_map_size[2], feature_map_size[3])
+            feature_map_size = feature.shape[2]
+            expected_shape = (out_channel, feature_map_size, feature_map_size)
             assert feature.shape[1:] == expected_shape, \
                 f"Expected shape: {expected_shape}, got: {feature.shape[1:]} at output IDX: {idx}"
         return tuple(out_features)
-
