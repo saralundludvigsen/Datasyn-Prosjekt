@@ -2,7 +2,6 @@ import torch
 from math import sqrt
 from itertools import product
 
-
 class PriorBox:
     def __init__(self, cfg):
         self.image_size = cfg.INPUT.IMAGE_SIZE
@@ -21,15 +20,7 @@ class PriorBox:
                 priors (num_priors, 4): The prior boxes represented as [[center_x, center_y, w, h]]. All the values
                     are relative to the image size.
         """
-        """
-        cfg.INPUT.IMAGE_SIZE = [270, 360]
-        FEATURE_MAPS: [[34,45], [17, 21], [9, 12], [5, 6], [3, 3], [1, 1]]
-        STRIDES: [[8, 8], [16, 27], [30, 30] , [54, 60], [90, 120], [270, 360]
-        MIN_SIZES: [[19, 25], [41, 54], [90, 119], [138, 184], [186, 248], [235, 313]]
-        MAX_SIZES: [[41, 54], [90, 119], [138, 184], [186, 248], [235, 313], [283, 378]]
-        ASPECT_RATIOS: [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
-        BOXES_PER_LOCATION: [4, 6, 6, 6, 4, 4]
-        """
+
         priors = []
         for k, f in enumerate(self.feature_maps):
             scaley = self.image_size[0] / self.strides[k][0]
